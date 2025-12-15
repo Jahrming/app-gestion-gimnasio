@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useContext } from 'react';
-import { getAllGyms, deleteGym, createGym, updateGym } from '../services/gymService';
+import { getAllGyms, deleteGym, createGym, updateGym, getGymById } from '../services/gymService';
 import { AuthContext } from '../context/AuthContext';
-import { Plus, Edit, Trash2, Search, MapPin, Phone, Building2 } from 'lucide-react';
+import { Plus, Edit, Trash2, Search, MapPin, Phone, Building2, User, Eye } from 'lucide-react';
 import GymModal from '../components/GymModal';
+import ViewGymModal from '../components/ViewGymModal';
 import ConfirmModal from '../components/ConfirmModal';
 import { useToast } from '../context/ToastContext';
 import { useLanguage } from '../context/LanguageContext';
@@ -18,6 +19,10 @@ const Gyms = () => {
     // Confirm Modal State
     const [confirmOpen, setConfirmOpen] = useState(false);
     const [gymToDelete, setGymToDelete] = useState(null);
+
+    // View Modal State
+    const [viewModalOpen, setViewModalOpen] = useState(false);
+    const [gymToView, setGymToView] = useState(null);
 
     const { addToast } = useToast();
     const { t } = useLanguage();
@@ -63,9 +68,28 @@ const Gyms = () => {
         setIsModalOpen(true);
     };
 
-    const handleEdit = (gym) => {
-        setCurrentGym(gym);
-        setIsModalOpen(true);
+    const handleEdit = async (gym) => {
+        try {
+            // Fetch complete gym data including owner_id
+            const completeGym = await getGymById(gym.id);
+            setCurrentGym(completeGym);
+            setIsModalOpen(true);
+        } catch (error) {
+            console.error('Error loading gym:', error);
+            addToast(t('errorFetching'), 'error');
+        }
+    };
+
+    const handleView = async (gym) => {
+        try {
+            // Fetch complete gym data including owner info
+            const completeGym = await getGymById(gym.id);
+            setGymToView(completeGym);
+            setViewModalOpen(true);
+        } catch (error) {
+            console.error('Error loading gym:', error);
+            addToast(t('errorFetching'), 'error');
+        }
     };
 
     const handleSave = async (gymData) => {
@@ -142,16 +166,25 @@ const Gyms = () => {
                                             <Building2 size={30} color="var(--text-muted)" />
                                         )}
                                     </div>
-                                    {canManage && (
-                                        <div style={{ display: 'flex', gap: '0.5rem' }}>
-                                            <button onClick={() => handleEdit(gym)} style={{ padding: '0.5rem', background: 'var(--surface-hover)', border: 'none', borderRadius: '6px', color: 'var(--text)', cursor: 'pointer' }}>
-                                                <Edit size={16} />
-                                            </button>
-                                            <button onClick={() => confirmDelete(gym)} style={{ padding: '0.5rem', background: 'rgba(239, 68, 68, 0.2)', border: 'none', borderRadius: '6px', color: '#ef4444', cursor: 'pointer' }}>
-                                                <Trash2 size={16} />
-                                            </button>
-                                        </div>
-                                    )}
+                                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                        <button
+                                            onClick={() => handleView(gym)}
+                                            style={{ padding: '0.5rem', background: 'var(--surface-hover)', border: 'none', borderRadius: '6px', color: 'var(--primary)', cursor: 'pointer' }}
+                                            title={t('view')}
+                                        >
+                                            <Eye size={16} />
+                                        </button>
+                                        {canManage && (
+                                            <>
+                                                <button onClick={() => handleEdit(gym)} style={{ padding: '0.5rem', background: 'var(--surface-hover)', border: 'none', borderRadius: '6px', color: 'var(--text)', cursor: 'pointer' }}>
+                                                    <Edit size={16} />
+                                                </button>
+                                                <button onClick={() => confirmDelete(gym)} style={{ padding: '0.5rem', background: 'rgba(239, 68, 68, 0.2)', border: 'none', borderRadius: '6px', color: '#ef4444', cursor: 'pointer' }}>
+                                                    <Trash2 size={16} />
+                                                </button>
+                                            </>
+                                        )}
+                                    </div>
                                 </div>
                                 <h3 style={{ fontSize: '1.25rem', fontWeight: 'bold', marginBottom: '0.5rem' }}>{gym.name}</h3>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-muted)', marginBottom: '0.25rem', fontSize: '0.875rem' }}>
@@ -162,6 +195,12 @@ const Gyms = () => {
                                     <Phone size={16} />
                                     <span>{gym.phone || 'No phone'}</span>
                                 </div>
+                                {gym.owner_first_name && (
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-muted)', fontSize: '0.875rem', marginTop: '0.25rem' }}>
+                                        <User size={16} />
+                                        <span>Owner: {gym.owner_first_name} {gym.owner_last_name}</span>
+                                    </div>
+                                )}
                             </div>
                         ))
                     )}
@@ -173,6 +212,12 @@ const Gyms = () => {
                 onClose={() => setIsModalOpen(false)}
                 gym={currentGym}
                 onSave={handleSave}
+            />
+
+            <ViewGymModal
+                isOpen={viewModalOpen}
+                onClose={() => setViewModalOpen(false)}
+                gym={gymToView}
             />
 
             <ConfirmModal

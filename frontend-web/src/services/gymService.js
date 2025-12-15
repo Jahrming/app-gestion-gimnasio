@@ -24,3 +24,8 @@ export const deleteGym = async (id) => {
     const response = await api.delete(`/gyms/${id}`);
     return response.data;
 };
+
+export const getAvailableOwners = async () => {
+    const response = await api.get('/gyms/owners/available');
+    return response.data;
+};

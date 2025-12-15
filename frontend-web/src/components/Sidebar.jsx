@@ -28,8 +28,8 @@ const Sidebar = ({ isOpen, onClose, isMobile }) => {
 
     const navItems = [
         { path: '/dashboard', icon: <LayoutDashboard size={20} />, label: t('dashboard'), roles: [1, 2, 3, 4] },
-        { path: '/users', icon: <Users size={20} />, label: t('users'), roles: [1, 2] },
-        { path: '/gyms', icon: <Building2 size={20} />, label: t('gyms'), roles: [1] }, // Only Super Admin
+        { path: '/users', icon: <Users size={20} />, label: t('users'), roles: [1, 2, 3] },  // Super Admin, Gym Owner, Trainer
+        { path: '/gyms', icon: <Building2 size={20} />, label: t('gyms'), roles: [1, 2] }, // Super Admin and Gym Owner
         { path: '/exercises', icon: <Dumbbell size={20} />, label: t('exercises'), roles: [1, 2, 3] },
         { path: '/routines', icon: <Calendar size={20} />, label: t('routines'), roles: [1, 2, 3, 4] },
         { path: '/measurements', icon: <Activity size={20} />, label: t('measurements'), roles: [3, 4] },

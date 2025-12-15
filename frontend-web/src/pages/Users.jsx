@@ -1,10 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { getAllUsers, deleteUser, createUser, updateUser } from '../services/userService';
-import { Plus, Edit, Trash2, Search } from 'lucide-react';
+import { Plus, Edit, Trash2, Search, Eye } from 'lucide-react';
 import UserModal from '../components/UserModal';
+import ViewUserModal from '../components/ViewUserModal';
 import ConfirmModal from '../components/ConfirmModal';
 import { useToast } from '../context/ToastContext';
 import { useLanguage } from '../context/LanguageContext';
+import { AuthContext } from '../context/AuthContext';
 
 const Users = () => {
     const [users, setUsers] = useState([]);
@@ -12,13 +14,19 @@ const Users = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [currentUser, setCurrentUser] = useState(null);
+    const [filterView, setFilterView] = useState('all'); // 'all', 'myUsers', 'trainers'
 
     // Confirm Modal State
     const [confirmOpen, setConfirmOpen] = useState(false);
     const [userToDelete, setUserToDelete] = useState(null);
 
+    // View Modal State
+    const [viewModalOpen, setViewModalOpen] = useState(false);
+    const [userToView, setUserToView] = useState(null);
+
     const { addToast } = useToast();
     const { t } = useLanguage();
+    const { user: authUser } = useContext(AuthContext);
 
     useEffect(() => {
         fetchUsers();
@@ -66,6 +74,11 @@ const Users = () => {
         setIsModalOpen(true);
     };
 
+    const handleView = (user) => {
+        setUserToView(user);
+        setViewModalOpen(true);
+    };
+
     const handleSave = async (userData) => {
         try {
             if (currentUser) {
@@ -94,11 +107,24 @@ const Users = () => {
         }
     };
 
-    const filteredUsers = users.filter(user =>
-        user.first_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        user.last_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        user.email?.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    const filteredUsers = users.filter(userItem => {
+        const matchesSearch = userItem.first_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            userItem.last_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            userItem.email?.toLowerCase().includes(searchTerm.toLowerCase());
+
+        // Apply role-based view filter for trainers
+        if (authUser && authUser.role_id === 3) { // If current user is trainer
+            if (filterView === 'myUsers') {
+                // Show only users created by this trainer (role 4 = athletes)
+                return matchesSearch && userItem.created_by === authUser.id && userItem.role_id === 4;
+            } else if (filterView === 'trainers') {
+                // Show only trainers from same gym (role 3)
+                return matchesSearch && userItem.role_id === 3;
+            }
+        }
+
+        return matchesSearch;
+    });
 
     return (
         <div>
@@ -129,6 +155,57 @@ const Users = () => {
                             style={{ width: '100%', padding: '0.75rem 1rem 0.75rem 3rem', borderRadius: '8px' }}
                         />
                     </div>
+
+                    {/* Filter tabs for Trainers */}
+                    {authUser && authUser.role_id === 3 && (
+                        <div style={{ display: 'flex', gap: '0.5rem', marginLeft: '1rem' }}>
+                            <button
+                                onClick={() => setFilterView('all')}
+                                style={{
+                                    padding: '0.75rem 1.5rem',
+                                    borderRadius: '8px',
+                                    background: filterView === 'all' ? 'var(--primary)' : 'var(--surface-hover)',
+                                    color: filterView === 'all' ? 'white' : 'var(--text)',
+                                    border: 'none',
+                                    cursor: 'pointer',
+                                    fontWeight: filterView === 'all' ? '600' : 'normal',
+                                    transition: 'all 0.2s'
+                                }}
+                            >
+                                Todos
+                            </button>
+                            <button
+                                onClick={() => setFilterView('myUsers')}
+                                style={{
+                                    padding: '0.75rem 1.5rem',
+                                    borderRadius: '8px',
+                                    background: filterView === 'myUsers' ? 'var(--primary)' : 'var(--surface-hover)',
+                                    color: filterView === 'myUsers' ? 'white' : 'var(--text)',
+                                    border: 'none',
+                                    cursor: 'pointer',
+                                    fontWeight: filterView === 'myUsers' ? '600' : 'normal',
+                                    transition: 'all 0.2s'
+                                }}
+                            >
+                                Mis Usuarios
+                            </button>
+                            <button
+                                onClick={() => setFilterView('trainers')}
+                                style={{
+                                    padding: '0.75rem 1.5rem',
+                                    borderRadius: '8px',
+                                    background: filterView === 'trainers' ? 'var(--primary)' : 'var(--surface-hover)',
+                                    color: filterView === 'trainers' ? 'white' : 'var(--text)',
+                                    border: 'none',
+                                    cursor: 'pointer',
+                                    fontWeight: filterView === 'trainers' ? '600' : 'normal',
+                                    transition: 'all 0.2s'
+                                }}
+                            >
+                                Trainers del Gym
+                            </button>
+                        </div>
+                    )}
                 </div>
 
                 <div style={{ overflowX: 'auto' }}>
@@ -173,10 +250,23 @@ const Users = () => {
                                             </span>
                                         </td>
                                         <td style={{ padding: '1rem 1.5rem' }}>
-                                            <span style={{ color: '#34d399', fontSize: '0.875rem' }}>{t('active')}</span>
+                                            <span style={{
+                                                color: user.is_active ? '#34d399' : '#f87171',
+                                                fontSize: '0.875rem',
+                                                fontWeight: '500'
+                                            }}>
+                                                {user.is_active ? t('active') : t('inactive')}
+                                            </span>
                                         </td>
                                         <td style={{ padding: '1rem 1.5rem', textAlign: 'right' }}>
                                             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem' }}>
+                                                <button
+                                                    onClick={() => handleView(user)}
+                                                    style={{ padding: '0.5rem', background: 'transparent', border: 'none', color: 'var(--primary)', cursor: 'pointer', transition: 'color 0.2s' }}
+                                                    title={t('view')}
+                                                >
+                                                    <Eye size={18} />
+                                                </button>
                                                 <button
                                                     onClick={() => handleEdit(user)}
                                                     style={{ padding: '0.5rem', background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', transition: 'color 0.2s' }}
@@ -206,6 +296,12 @@ const Users = () => {
                 onClose={() => setIsModalOpen(false)}
                 user={currentUser}
                 onSave={handleSave}
+            />
+
+            <ViewUserModal
+                isOpen={viewModalOpen}
+                onClose={() => setViewModalOpen(false)}
+                user={userToView}
             />
 
             <ConfirmModal

@@ -7,6 +7,7 @@ const verifyToken = require('../middleware/authMiddleware');
 router.use(verifyToken);
 
 router.get('/', gymController.getAllGyms);
+router.get('/owners/available', gymController.getAvailableOwners);
 router.get('/:id', gymController.getGymById);
 router.post('/', gymController.createGym);
 router.put('/:id', gymController.updateGym);

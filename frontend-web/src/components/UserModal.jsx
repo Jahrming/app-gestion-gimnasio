@@ -1,16 +1,56 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { X } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
+import { AuthContext } from '../context/AuthContext';
 
 const UserModal = ({ isOpen, onClose, user, onSave }) => {
     const { t } = useLanguage();
+    const { user: currentUser } = useContext(AuthContext);
+
     const [formData, setFormData] = useState({
         first_name: '',
         last_name: '',
         email: '',
         password: '',
-        role_id: 4 // Default to Client
+        role_id: 4,
+        is_active: true
     });
+
+    // Determinar rol por defecto según el usuario actual
+    const getDefaultRole = () => {
+        if (!currentUser) return 4;
+        if (currentUser.role_id === 1) return 4; // Super Admin default: Athlete
+        if (currentUser.role_id === 2) return 4; // Gym Owner default: Athlete
+        if (currentUser.role_id === 3) return 4; // Trainer default: Athlete
+        return 4;
+    };
+
+    // Determinar roles disponibles según el rol del usuario actual
+    const getAvailableRoles = () => {
+        if (!currentUser) return [{ value: 4, label: 'Athlete' }];
+
+        if (currentUser.role_id === 1) {
+            // Super Admin puede crear cualquier rol
+            return [
+                { value: 1, label: 'Super Admin' },
+                { value: 2, label: 'Gym Owner' },
+                { value: 3, label: 'Trainer' },
+                { value: 4, label: 'Athlete' }
+            ];
+        } else if (currentUser.role_id === 2) {
+            // Gym Owner solo puede crear Trainers y Athletes
+            return [
+                { value: 3, label: 'Trainer' },
+                { value: 4, label: 'Athlete' }
+            ];
+        } else if (currentUser.role_id === 3) {
+            // Trainer solo puede crear Athletes
+            return [
+                { value: 4, label: 'Athlete' }
+            ];
+        }
+        return [{ value: 4, label: 'Athlete' }];
+    };
 
     useEffect(() => {
         if (user) {
@@ -19,7 +59,8 @@ const UserModal = ({ isOpen, onClose, user, onSave }) => {
                 last_name: user.last_name || '',
                 email: user.email || '',
                 password: '', // Don't populate password on edit
-                role_id: user.role_id || 4
+                role_id: user.role_id || 4,
+                is_active: user.is_active !== undefined ? user.is_active : true
             });
         } else {
             setFormData({
@@ -27,12 +68,15 @@ const UserModal = ({ isOpen, onClose, user, onSave }) => {
                 last_name: '',
                 email: '',
                 password: '',
-                role_id: 4
+                role_id: getDefaultRole(),
+                is_active: true
             });
         }
     }, [user, isOpen]);
 
     if (!isOpen) return null;
+
+    const availableRoles = getAvailableRoles();
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -117,26 +161,51 @@ const UserModal = ({ isOpen, onClose, user, onSave }) => {
                         </div>
                     )}
 
-                    <div style={{ marginBottom: '2rem' }}>
+                    <div style={{ marginBottom: '1rem' }}>
                         <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', color: 'var(--text)' }}>{t('role')}</label>
                         <select
                             name="role_id"
                             value={formData.role_id}
                             onChange={handleChange}
+                            disabled={user && currentUser.role_id !== 1} // Solo Super Admin puede cambiar roles
                             style={{
                                 width: '100%',
                                 padding: '0.75rem',
                                 borderRadius: '8px'
                             }}
                         >
-                            <option value="1">Super Admin</option>
-                            <option value="2">Gym Owner</option>
-                            <option value="3">Trainer</option>
-                            <option value="4">Athlete</option>
+                            {availableRoles.map(role => (
+                                <option key={role.value} value={role.value}>
+                                    {role.label}
+                                </option>
+                            ))}
                         </select>
                     </div>
 
-                    <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
+                    {/* Status Selector - Only in edit mode and for authorized users */}
+                    {user && (currentUser.role_id === 1 || user.created_by === currentUser.id) && (
+                        <div style={{ marginBottom: '1rem' }}>
+                            <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', color: 'var(--text)' }}>{t('status')}</label>
+                            <select
+                                name="is_active"
+                                value={formData.is_active ? 'true' : 'false'}
+                                onChange={(e) => setFormData(prev => ({
+                                    ...prev,
+                                    is_active: e.target.value === 'true'
+                                }))}
+                                style={{
+                                    width: '100%',
+                                    padding: '0.75rem',
+                                    borderRadius: '8px'
+                                }}
+                            >
+                                <option value="true">{t('active')}</option>
+                                <option value="false">{t('inactive')}</option>
+                            </select>
+                        </div>
+                    )}
+
+                    <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end', marginTop: '2rem' }}>
                         <button
                             type="button"
                             onClick={onClose}

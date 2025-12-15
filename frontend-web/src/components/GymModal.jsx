@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
+import { getAvailableOwners } from '../services/gymService';
 
 const GymModal = ({ isOpen, onClose, gym, onSave }) => {
     const { t } = useLanguage();
@@ -8,23 +9,40 @@ const GymModal = ({ isOpen, onClose, gym, onSave }) => {
         name: '',
         address: '',
         phone: '',
-        logo_url: ''
+        logo_url: '',
+        owner_id: ''
     });
+    const [owners, setOwners] = useState([]);
 
     useEffect(() => {
+        const loadOwners = async () => {
+            try {
+                const data = await getAvailableOwners();
+                setOwners(data);
+            } catch (error) {
+                console.error('Error loading owners:', error);
+            }
+        };
+
+        if (isOpen) {
+            loadOwners();
+        }
+
         if (gym) {
             setFormData({
                 name: gym.name || '',
                 address: gym.address || '',
                 phone: gym.phone || '',
-                logo_url: gym.logo_url || ''
+                logo_url: gym.logo_url || '',
+                owner_id: gym.owner_id || ''
             });
         } else {
             setFormData({
                 name: '',
                 address: '',
                 phone: '',
-                logo_url: ''
+                logo_url: '',
+                owner_id: ''
             });
         }
     }, [gym, isOpen]);
@@ -96,7 +114,7 @@ const GymModal = ({ isOpen, onClose, gym, onSave }) => {
                         />
                     </div>
 
-                    <div style={{ marginBottom: '2rem' }}>
+                    <div style={{ marginBottom: '1rem' }}>
                         <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', color: 'var(--text)' }}>{t('logoUrl')}</label>
                         <input
                             name="logo_url"
@@ -105,6 +123,26 @@ const GymModal = ({ isOpen, onClose, gym, onSave }) => {
                             placeholder="https://example.com/logo.png"
                             style={{ width: '100%', padding: '0.75rem', borderRadius: '8px' }}
                         />
+                    </div>
+
+                    <div style={{ marginBottom: '2rem' }}>
+                        <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', color: 'var(--text)' }}>
+                            {t('gymOwner')} <span style={{ color: '#ef4444' }}>*</span>
+                        </label>
+                        <select
+                            name="owner_id"
+                            value={formData.owner_id}
+                            onChange={handleChange}
+                            required
+                            style={{ width: '100%', padding: '0.75rem', borderRadius: '8px' }}
+                        >
+                            <option value="">{t('selectOwner')}</option>
+                            {owners.map(owner => (
+                                <option key={owner.id} value={owner.id}>
+                                    {owner.first_name} {owner.last_name} ({owner.email})
+                                </option>
+                            ))}
+                        </select>
                     </div>
 
                     <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
