@@ -32,8 +32,9 @@ const Sidebar = ({ isOpen, onClose, isMobile }) => {
         { path: '/gyms', icon: <Building2 size={20} />, label: t('gyms'), roles: [1, 2] }, // Super Admin and Gym Owner
         { path: '/exercises', icon: <Dumbbell size={20} />, label: t('exercises'), roles: [1, 2, 3] },
         { path: '/routines', icon: <Calendar size={20} />, label: t('routines'), roles: [1, 2, 3, 4] },
+        { path: '/workouts', icon: <Activity size={20} />, label: t('myWorkouts'), roles: [1, 2, 3, 4] },
         { path: '/measurements', icon: <Activity size={20} />, label: t('measurements'), roles: [3, 4] },
-        { path: '/diets', icon: <Utensils size={20} />, label: t('diets'), roles: [3, 4] },
+        { path: '/diets', icon: <Utensils size={20} />, label: t('diets'), roles: [1, 2, 3, 4] },
         { path: '/community', icon: <MessageSquare size={20} />, label: t('community'), roles: [1, 2, 3, 4] },
         { path: '/settings', icon: <Settings size={20} />, label: t('settings'), roles: [1, 2, 3, 4] },
     ];

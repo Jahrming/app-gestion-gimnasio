@@ -8,6 +8,13 @@ import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import Users from './pages/Users';
 import Gyms from './pages/Gyms';
+import Exercises from './pages/Exercises';
+import Routines from './pages/Routines';
+import RoutineBuilder from './pages/RoutineBuilder';
+import Workouts from './pages/Workouts';
+import WorkoutLogger from './pages/WorkoutLogger';
+import Diets from './pages/Diets';
+import DietBuilder from './pages/DietBuilder';
 import MainLayout from './layouts/MainLayout';
 
 const PrivateRoute = ({ children }) => {
@@ -57,6 +64,96 @@ function App() {
                     </PrivateRoute>
                   }
                 />
+                <Route
+                  path="/exercises"
+                  element={
+                    <PrivateRoute>
+                      <MainLayout>
+                        <Exercises />
+                      </MainLayout>
+                    </PrivateRoute>
+                  }
+                />
+                <Route
+                  path="/routines"
+                  element={
+                    <PrivateRoute>
+                      <MainLayout>
+                        <Routines />
+                      </MainLayout>
+                    </PrivateRoute>
+                  }
+                />
+                <Route
+                  path="/routines/new"
+                  element={
+                    <PrivateRoute>
+                      <MainLayout>
+                        <RoutineBuilder />
+                      </MainLayout>
+                    </PrivateRoute>
+                  }
+                />
+                <Route
+                  path="/routines/:id"
+                  element={
+                    <PrivateRoute>
+                      <MainLayout>
+                        <RoutineBuilder />
+                      </MainLayout>
+                    </PrivateRoute>
+                  }
+                />
+                <Route
+                  path="/routines/:id/edit"
+                  element={
+                    <PrivateRoute>
+                      <MainLayout>
+                        <RoutineBuilder />
+                      </MainLayout>
+                    </PrivateRoute>
+                  }
+                />
+                <Route
+                  path="/workouts"
+                  element={
+                    <PrivateRoute>
+                      <MainLayout>
+                        <Workouts />
+                      </MainLayout>
+                    </PrivateRoute>
+                  }
+                />
+                <Route
+                  path="/workouts/new"
+                  element={
+                    <PrivateRoute>
+                      <MainLayout>
+                        <WorkoutLogger />
+                      </MainLayout>
+                    </PrivateRoute>
+                  }
+                />
+                <Route
+                  path="/diets"
+                  element={
+                    <PrivateRoute>
+                      <MainLayout>
+                        <Diets />
+                      </MainLayout>
+                    </PrivateRoute>
+                  }
+                />
+                <Route
+                  path="/diets/:id"
+                  element={
+                    <PrivateRoute>
+                      <MainLayout>
+                        <DietBuilder />
+                      </MainLayout>
+                    </PrivateRoute>
+                  }
+                />
                 <Route path="/" element={<Navigate to="/dashboard" />} />
               </Routes>
             </Router>
@@ -68,3 +165,5 @@ function App() {
 }
 
 export default App;
+
+

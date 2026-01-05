@@ -32,6 +32,17 @@ const getAllUsers = async (req, res) => {
             query += ' WHERE ' + whereConditions.join(' AND ');
         }
 
+        // Apply filters from query params
+        const { role_id: filterRole, search } = req.query;
+        if (filterRole) {
+            query += ` AND role_id = ?`;
+            params.push(filterRole);
+        }
+        if (search) {
+            query += ` AND (first_name LIKE ? OR last_name LIKE ? OR email LIKE ?)`;
+            params.push(`%${search}%`, `%${search}%`, `%${search}%`);
+        }
+
         query += ' ORDER BY created_at DESC';
 
         const [users] = await pool.query(query, params);

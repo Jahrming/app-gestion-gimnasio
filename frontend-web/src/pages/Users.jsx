@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext } from 'react';
-import { getAllUsers, deleteUser, createUser, updateUser } from '../services/userService';
+import { getUsers, deleteUser, createUser, updateUser } from '../services/userService';
 import { Plus, Edit, Trash2, Search, Eye } from 'lucide-react';
 import UserModal from '../components/UserModal';
 import ViewUserModal from '../components/ViewUserModal';
@@ -34,7 +34,7 @@ const Users = () => {
 
     const fetchUsers = async () => {
         try {
-            const data = await getAllUsers();
+            const data = await getUsers();
             setUsers(data);
         } catch (error) {
             console.error('Error fetching users:', error);
